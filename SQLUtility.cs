@@ -35,7 +35,37 @@ namespace CPUFramework
             GetDataTable(sqlstatement);
         }
 
-        public static int GetFirstColumnFirstRowValue(string sql)
+        public static string GetFirstColumnFirstRowValueString(string sql)
+        {
+            string n = "";
+            DataTable dt = GetDataTable(sql);
+            if (dt.Rows.Count > 0 && dt.Columns.Count > 0)
+            {
+                if (dt.Rows[0][0] != DBNull.Value)
+                {
+                    n = dt.Rows[0][0].ToString();
+                }
+               
+            }
+            return n;
+        }
+
+        public static DateTime GetFirstColumnFirstRowValueDate(string sql)
+        {
+            DateTime n = DateTime.Now;
+            DataTable dt = GetDataTable(sql);
+            if (dt.Rows.Count > 0 && dt.Columns.Count > 0)
+            {
+                if (dt.Rows[0][0] != DBNull.Value)
+                {
+                    DateTime.TryParse(dt.Rows[0][0].ToString(), out n);
+                }
+
+            }
+            return n;
+        }
+
+        public static int GetFirstColumnFirstRowValueInt(string sql)
         {
             int n = 0;
             DataTable dt = GetDataTable(sql);
@@ -45,7 +75,7 @@ namespace CPUFramework
                 {
                     int.TryParse(dt.Rows[0][0].ToString(), out n);
                 }
-               
+
             }
             return n;
         }
