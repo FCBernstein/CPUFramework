@@ -13,21 +13,49 @@ namespace CPUFramework
     public class SQLUtility
     {
         public static string ConnectionString = "";
-        public static DataTable GetDataTable(string sqlstatement) //- take a SQL statement and return a DataTable
+
+        public static SqlCommand GetSQLCommand(string sprocname)
         {
-            Debug.Print(sqlstatement);
+            SqlCommand cmd;
+            using (SqlConnection conn = new SqlConnection(SQLUtility.ConnectionString))
+            {
+                cmd = new SqlCommand(sprocname, conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                conn.Open();
+                SqlCommandBuilder.DeriveParameters(cmd);
+            }
+            return cmd;
+        }
+
+        public static DataTable GetDataTable(SqlCommand cmd)
+        {
+            Debug.Print("------" + Environment.NewLine + cmd.CommandText);
             DataTable dt = new();
-            SqlConnection conn = new();
-            conn.ConnectionString = ConnectionString;
-            conn.Open();
-            //DisplayMessage("Conn Status ", conn.State.ToString());
-            var cmd = new SqlCommand();
-            cmd.Connection = conn;
-            cmd.CommandText = sqlstatement;
-            var dr = cmd.ExecuteReader();
-            dt.Load(dr);
+            using (SqlConnection conn = new SqlConnection(SQLUtility.ConnectionString))
+            {
+                conn.Open();
+                cmd.Connection = conn;
+                SqlDataReader dr = cmd.ExecuteReader();
+                dt.Load(dr);
+            }
             SetAllColumnsAllowNull(dt);
             return dt;
+        }
+
+        public static DataTable GetDataTable(string sqlstatement) //- take a SQL statement and return a DataTable
+        {
+            //DataTable dt = new();
+            //SqlConnection conn = new();
+            //conn.ConnectionString = ConnectionString;
+            //conn.Open();
+            ////DisplayMessage("Conn Status ", conn.State.ToString());
+            //var cmd = new SqlCommand();
+            //cmd.Connection = conn;
+            //cmd.CommandText = sqlstatement;
+            //var dr = cmd.ExecuteReader();
+            //dt.Load(dr);
+            //SetAllColumnsAllowNull(dt);
+            return GetDataTable(new SqlCommand(sqlstatement));
         }
 
         public static void ExecuteSQL(string sqlstatement)
