@@ -52,6 +52,15 @@ namespace CPUFramework
                     string colname = p.ParameterName.Substring(1);
                     if (row.Table.Columns.Contains(colname))
                     {
+
+                        //5-27-2025
+                        //JF: I added this in since the PK column was coming in as ReadOnly and therefore preventing the 'set'
+                        //I overwrote it here, but should be looked into more if this is due to the new SQL package or something else.
+                        //I did not review all the code so it may be due to something simple elsewhere, but I wanted her to be able to continue
+                        if (row.Table.Columns[colname].ReadOnly)
+                        {
+                            row.Table.Columns[colname].ReadOnly = false;
+                        }
                         row[colname] = p.Value;
                     }
                 }
