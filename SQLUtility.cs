@@ -32,7 +32,17 @@ namespace CPUFramework
             return DoExecuteSQL(cmd, true);
         }
 
-        public static void SaveDataRow(DataRow row, string sprocname)
+        public static void SaveDataTable(DataTable dt, string sprocname)
+        {
+            var rows = dt.Select("", "", DataViewRowState.Added | DataViewRowState.ModifiedCurrent);
+            foreach (DataRow r in rows)
+            {
+                SaveDataRow(r, sprocname, false);
+            }
+            dt.AcceptChanges();
+        }
+
+        public static void SaveDataRow(DataRow row, string sprocname, bool acceptchanges = true)
         {
             SqlCommand cmd = GetSQLCommand(sprocname);
             foreach (DataColumn col in row.Table.Columns)
@@ -44,7 +54,6 @@ namespace CPUFramework
                 }
             }
             DoExecuteSQL(cmd, false);
-
             foreach (SqlParameter p in cmd.Parameters)
             {
                 if (p.Direction == ParameterDirection.InputOutput)
@@ -64,6 +73,10 @@ namespace CPUFramework
                         row[colname] = p.Value;
                     }
                 }
+            }
+            if (acceptchanges == true)
+            {
+                row.Table.AcceptChanges();
             }
         }
         private static DataTable DoExecuteSQL(SqlCommand cmd, bool loadtable)
@@ -93,7 +106,7 @@ namespace CPUFramework
                     throw new Exception(cmd.CommandText + ": " + ex.Message, ex);
                 }
             }
-            SetAllColumnsAllowNull(dt);
+            SetAllColumnProperties(dt);
             return dt;
         }
 
@@ -135,17 +148,6 @@ namespace CPUFramework
 
         public static DataTable GetDataTable(string sqlstatement) //- take a SQL statement and return a DataTable
         {
-            //DataTable dt = new();
-            //SqlConnection conn = new();
-            //conn.ConnectionString = ConnectionString;
-            //conn.Open();
-            ////DisplayMessage("Conn Status ", conn.State.ToString());
-            //var cmd = new SqlCommand();
-            //cmd.Connection = conn;
-            //cmd.CommandText = sqlstatement;
-            //var dr = cmd.ExecuteReader();
-            //dt.Load(dr);
-            //SetAllColumnsAllowNull(dt);
             return DoExecuteSQL(new SqlCommand(sqlstatement), true);
         }
 
@@ -175,6 +177,7 @@ namespace CPUFramework
             string origmsg = msg;
             string prefix = "ck_";
             string msgend = "";
+            string notnullprefix = "Cannot insert the value NULL into column '";
             if (msg.Contains(prefix) == false)
             {
                 if (msg.Contains("u_"))
@@ -185,6 +188,11 @@ namespace CPUFramework
                 else if (msg.Contains("f_"))
                 {
                     prefix = "f_";
+                }
+                else if (msg.Contains(notnullprefix))
+                {
+                    prefix = notnullprefix;
+                    msgend = " cannot be blank.";
                 }
             }
             if (msg.Contains(prefix))
@@ -261,12 +269,51 @@ namespace CPUFramework
             return n;
         }
 
-        private static void SetAllColumnsAllowNull(DataTable dt1)
+        private static void SetAllColumnProperties(DataTable dt1)
         {
             foreach (DataColumn c in dt1.Columns)
             {
                 c.AllowDBNull = true;
+                c.AutoIncrement = false;
             }
+        }
+
+        public static int GetValueFromFirstRowAsInt(DataTable dt, string columnname)
+        {
+            int value = 0;
+            if (dt.Rows.Count > 0)
+            {
+                DataRow r = dt.Rows[0];
+                if (r[columnname] != null && r[columnname] is int)
+                {
+                    value = (int)r[columnname];
+                }
+            }
+            return value;
+        }
+
+        public static string GetValueFromFirstRowAsString(DataTable dt, string columnname)
+        {
+            string value = "";
+            if (dt.Rows.Count > 0)
+            {
+                DataRow r = dt.Rows[0];
+                if (r[columnname] != null && r[columnname] is string)
+                {
+                    value = (string)r[columnname];
+                }
+            }
+            return value;
+        }
+
+        public static bool TableHasChanges(DataTable dt)
+        {
+            bool b = false;
+            if (dt.GetChanges() != null)
+            {
+                b = true;
+            }
+            return b;
         }
 
         public static string GetSQL(SqlCommand cmd)
