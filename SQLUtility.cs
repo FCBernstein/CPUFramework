@@ -12,7 +12,30 @@ namespace CPUFramework
 {
     public class SQLUtility
     {
-        public static string ConnectionString = "";
+        private static string ConnectionString = "";
+
+        public static void SetConnectionString(string connstring, bool tryopen, string userid = "", string password = "")
+        {
+            ConnectionString = connstring;
+            if (userid != "")
+            {
+                SqlConnectionStringBuilder b = new SqlConnectionStringBuilder();
+                b.ConnectionString = ConnectionString;
+                b.UserID = userid;
+                b.Password = password;
+                b.Encrypt = true;
+                b.TrustServerCertificate = true;
+                ConnectionString = b.ConnectionString;
+            }
+            if (tryopen) 
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString)) 
+                {
+                    conn.Open();
+                }
+            }
+
+        }
 
         public static SqlCommand GetSQLCommand(string sprocname)
         {
