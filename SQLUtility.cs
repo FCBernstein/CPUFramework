@@ -17,16 +17,25 @@ namespace CPUFramework
         public static void SetConnectionString(string connstring, bool tryopen, string userid = "", string password = "")
         {
             ConnectionString = connstring;
-            if (userid != "")
+
+            // Build connection string and ensure encryption settings are applied for both
+            // Integrated Security and SQL Authentication scenarios. This forces Encrypt
+            // and TrustServerCertificate to true to avoid SSL certificate validation
+            // failures when the server certificate chain is not trusted.
+            SqlConnectionStringBuilder b = new SqlConnectionStringBuilder();
+            b.ConnectionString = ConnectionString;
+            if (!string.IsNullOrEmpty(userid))
             {
-                SqlConnectionStringBuilder b = new SqlConnectionStringBuilder();
-                b.ConnectionString = ConnectionString;
                 b.UserID = userid;
                 b.Password = password;
-                b.Encrypt = true;
-                b.TrustServerCertificate = true;
-                ConnectionString = b.ConnectionString;
+                // When using explicit credentials, make sure Integrated Security is off
+                b.IntegratedSecurity = false;
             }
+
+            b.Encrypt = true;
+            b.TrustServerCertificate = true;
+            ConnectionString = b.ConnectionString;
+
             if (tryopen) 
             {
                 using (SqlConnection conn = new SqlConnection(ConnectionString)) 
@@ -186,6 +195,10 @@ namespace CPUFramework
 
         public static void SetParamValue(SqlCommand cmd, string paramname, object value)
         {
+            if(paramname.StartsWith("@") == false)
+            {
+                paramname = "@" + paramname;
+            }
             try 
             { 
                 cmd.Parameters[paramname].Value = value; 
@@ -298,6 +311,7 @@ namespace CPUFramework
             {
                 c.AllowDBNull = true;
                 c.AutoIncrement = false;
+                c.ReadOnly = false;
             }
         }
 

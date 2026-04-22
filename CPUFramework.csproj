@@ -1,13 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- When the solution build passes MAUI mobile RIDs (maccatalyst/ios), override
+         them for this library so restore/build won't try to resolve ASP.NET Core
+         runtime packs for mobile runtimes which don't exist. -->
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Microsoft.AspNetCore.OpenApi moved to RecordKeeperAPI to avoid bringing
+         ASP.NET Core framework references into shared libraries consumed by MAUI
+         builds (prevents NETSDK1082 and source-generator errors during library builds). -->
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+    <!-- OpenAPI and Swashbuckle packages moved to RecordKeeperAPI to avoid
+         bringing ASP.NET Core framework references into shared libraries used
+         by MAUI projects. -->
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
   </ItemGroup>
 
