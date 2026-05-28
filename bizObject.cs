@@ -67,7 +67,7 @@ namespace CPUFramework
             return lst;
         }
 
-        private void LoadProps(DataRow dr)
+        protected void LoadProps(DataRow dr)
         {
             foreach (DataColumn col in dr.Table.Columns)
             {
@@ -77,6 +77,7 @@ namespace CPUFramework
 
         public void Delete(int id) 
         {
+            this.ErrorMessage = "";
             SqlCommand cmd = SQLUtility.GetSQLCommand(_deletesproc);
             SQLUtility.SetParamValue(cmd, _primarykeyparamname, id);
             SQLUtility.ExecuteSQL(cmd);
@@ -84,6 +85,7 @@ namespace CPUFramework
 
         public void Delete()
         {
+            this.ErrorMessage = "";
             PropertyInfo? prop = GetProp(_primarykeyname, true, false);
             if (prop != null)
             {
@@ -104,7 +106,8 @@ namespace CPUFramework
         }
 
         public void Save() 
-        { 
+        {
+            this.ErrorMessage = "";
             SqlCommand cmd = SQLUtility.GetSQLCommand(_updatesproc);
             foreach (SqlParameter param in cmd.Parameters)
             {
@@ -131,6 +134,7 @@ namespace CPUFramework
 
         public void Save(DataTable datatable)
         {
+            this.ErrorMessage = "";
             if (datatable.Rows.Count == 0)
             {
                 throw new Exception($"Cannot call {_tablename} Save method because there ar no rows in the table");
@@ -181,5 +185,7 @@ namespace CPUFramework
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyname));
         }
+
+        public string ErrorMessage { get; set; } = "";
     }
 }

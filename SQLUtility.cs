@@ -17,28 +17,19 @@ namespace CPUFramework
         public static void SetConnectionString(string connstring, bool tryopen, string userid = "", string password = "")
         {
             ConnectionString = connstring;
-
-            // Build connection string and ensure encryption settings are applied for both
-            // Integrated Security and SQL Authentication scenarios. This forces Encrypt
-            // and TrustServerCertificate to true to avoid SSL certificate validation
-            // failures when the server certificate chain is not trusted.
-            SqlConnectionStringBuilder b = new SqlConnectionStringBuilder();
-            b.ConnectionString = ConnectionString;
-            if (!string.IsNullOrEmpty(userid))
+            if (userid != "")
             {
+                SqlConnectionStringBuilder b = new SqlConnectionStringBuilder();
+                b.ConnectionString = ConnectionString;
                 b.UserID = userid;
                 b.Password = password;
-                // When using explicit credentials, make sure Integrated Security is off
-                b.IntegratedSecurity = false;
+                b.Encrypt = true;
+                b.TrustServerCertificate = true;
+                ConnectionString = b.ConnectionString;
             }
-
-            b.Encrypt = true;
-            b.TrustServerCertificate = true;
-            ConnectionString = b.ConnectionString;
-
-            if (tryopen) 
+            if (tryopen)
             {
-                using (SqlConnection conn = new SqlConnection(ConnectionString)) 
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
                 {
                     conn.Open();
                 }
